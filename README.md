@@ -7,7 +7,7 @@ Discord bot for publishing formatted game announcements in Russian and English.
 1. Create a Discord application and bot in the Developer Portal.
 2. Enable the **Message Content Intent** (required for DM parsing).
 3. Invite the bot to your server with the `applications.commands` scope.
-4. Create a `.env` file or export `DISCORD_TOKEN` with your bot token.
+4. Export `DISCORD_TOKEN` with your bot token.
 5. Add `ALLOWED_USER_IDS` with your Discord ID(s), comma-separated.
 6. (Optional) Set `DISCORD_GUILD_ID` if the bot is in multiple servers.
 

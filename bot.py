@@ -3,9 +3,6 @@ from typing import Iterable
 
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
-
-load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = int(os.getenv("DISCORD_GUILD_ID", "0")) or None
