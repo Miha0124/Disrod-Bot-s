@@ -10,6 +10,7 @@ Discord bot for publishing formatted game announcements in Russian and English.
 4. Export `DISCORD_TOKEN` with your bot token.
 5. Add `ALLOWED_USER_IDS` with your Discord ID(s), comma-separated.
 6. (Optional) Set `DISCORD_GUILD_ID` if the bot is in multiple servers.
+7. (Optional) Set `TRANSLATE_URL` to a LibreTranslate-compatible endpoint.
 
 ## Install
 
@@ -35,12 +36,13 @@ Send the bot a direct message with key/value pairs (one per line).
 game: updates-paradox
 version: 1.2.3
 ru_description: Русское описание
-en_description: English description
-ru_log1: Первый пункт
-ru_log2: Второй пункт
-en_log1: First log
-en_log2: Second log
+log: Первый пункт
+log2: Второй пункт (опционально)
 ```
+
+If you send only Russian (`ru_description`, `log`, `log2`) or only English
+(`en_description`, `en_log1`, `en_log2`), the bot will auto-translate the
+missing language using the configured translation endpoint.
 
 ### Project status (edits the last bot message if it exists)
 
