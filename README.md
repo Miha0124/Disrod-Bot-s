@@ -9,8 +9,10 @@ Discord bot for publishing formatted game announcements in Russian and English.
 3. Invite the bot to your server with the `applications.commands` scope.
 4. Export `DISCORD_TOKEN` with your bot token.
 5. Add `ALLOWED_USER_IDS` with your Discord ID(s), comma-separated.
-6. (Optional) Set `DISCORD_GUILD_ID` if the bot is in multiple servers.
-7. (Optional) Set `TRANSLATE_URL` to a LibreTranslate-compatible endpoint. If omitted, the bot uses MyMemory (free public API) as a fallback.
+6. Add `MANAGER_USER_IDS` with IDs allowed to manage access.
+7. (Optional) Set `ALLOWED_USERS_FILE` to override where access is stored.
+8. (Optional) Set `DISCORD_GUILD_ID` if the bot is in multiple servers.
+9. (Optional) Set `TRANSLATE_URL` to a LibreTranslate-compatible endpoint. If omitted, the bot uses MyMemory (free public API) as a fallback.
 
 ## Install
 
@@ -69,3 +71,10 @@ The bot will post into the matching channel:
 - updates-bdft
 - update-endless-void
 - status-of-projects
+
+### Manage allowed users (managers only)
+
+```text
+User Add: 123456789012345678
+User Del: 123456789012345678
+```

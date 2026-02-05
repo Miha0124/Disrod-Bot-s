@@ -11,9 +11,15 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = int(os.getenv("DISCORD_GUILD_ID", "0")) or None
 TRANSLATE_URL = os.getenv("TRANSLATE_URL")
 MYMEMORY_URL = "https://api.mymemory.translated.net/get"
+ALLOWED_USERS_FILE = os.getenv("ALLOWED_USERS_FILE", "allowed_users.json")
 ALLOWED_USER_IDS = {
     int(user_id)
     for user_id in os.getenv("ALLOWED_USER_IDS", "").split(",")
+    if user_id.strip().isdigit()
+}
+MANAGER_USER_IDS = {
+    int(user_id)
+    for user_id in os.getenv("MANAGER_USER_IDS", "").split(",")
     if user_id.strip().isdigit()
 }
 
@@ -51,7 +57,27 @@ game: status-of-projects
 project: Endless Void
 version: 0.9.0
 status: В разработке / In development
+
+4) Управление доступом (только менеджеры):
+User Add: 123456789012345678
+User Del: 123456789012345678
 """
+
+
+def load_allowed_users() -> set[int]:
+    try:
+        with open(ALLOWED_USERS_FILE, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        return {int(user_id) for user_id in data if str(user_id).isdigit()}
+    except FileNotFoundError:
+        return set(ALLOWED_USER_IDS)
+    except (json.JSONDecodeError, OSError, ValueError):
+        return set(ALLOWED_USER_IDS)
+
+
+def save_allowed_users(user_ids: set[int]) -> None:
+    with open(ALLOWED_USERS_FILE, "w", encoding="utf-8") as handle:
+        json.dump(sorted(user_ids), handle, ensure_ascii=False, indent=2)
 
 
 def build_embed(
@@ -178,6 +204,8 @@ def resolve_guild() -> discord.Guild | None:
 @bot.event
 async def on_ready() -> None:
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
+    if ALLOWED_USERS_FILE and not os.path.exists(ALLOWED_USERS_FILE):
+        save_allowed_users(ALLOWED_USER_IDS)
 
 
 @bot.event
@@ -186,11 +214,34 @@ async def on_message(message: discord.Message) -> None:
         return
     if not isinstance(message.channel, discord.DMChannel):
         return
-    if ALLOWED_USER_IDS and message.author.id not in ALLOWED_USER_IDS:
+    allowed_users = load_allowed_users()
+    if allowed_users and message.author.id not in allowed_users:
         return
     if message.content.strip().lower() == "help":
         await message.channel.send(HELP_MESSAGE)
         return
+    if message.content.lower().startswith("user add:") or message.content.lower().startswith(
+        "user del:"
+    ):
+        if MANAGER_USER_IDS and message.author.id not in MANAGER_USER_IDS:
+            await message.channel.send("Недостаточно прав для управления доступом.")
+            return
+        action, _, raw_id = message.content.partition(":")
+        raw_id = raw_id.strip()
+        if not raw_id.isdigit():
+            await message.channel.send("Нужно указать числовой Discord ID.")
+            return
+        target_id = int(raw_id)
+        if action.lower().startswith("user add"):
+            allowed_users.add(target_id)
+            save_allowed_users(allowed_users)
+            await message.channel.send(f"Пользователь {target_id} добавлен.")
+            return
+        if action.lower().startswith("user del"):
+            allowed_users.discard(target_id)
+            save_allowed_users(allowed_users)
+            await message.channel.send(f"Пользователь {target_id} удалён.")
+            return
 
     data = parse_key_values(message.content.splitlines())
     game = data.get("game")
