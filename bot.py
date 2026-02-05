@@ -22,7 +22,11 @@ GAME_CHANNELS = {
     "updates-bdft": "updates-bdft",
     "update-endless-void": "update-endless-void",
     "status-of-projects": "status-of-projects",
+    "announcements": "объявления",
+    "объявления": "объявления",
 }
+
+ANNOUNCEMENT_EN_CHANNEL = "announcement"
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -209,6 +213,27 @@ async def on_message(message: discord.Message) -> None:
         else:
             await target_channel.send(embed=embed)
             await message.channel.send("Сообщение отправлено.")
+        return
+
+    if game in {"announcements", "объявления"}:
+        text = data.get("text")
+        if not text:
+            await message.channel.send("Для объявлений нужен параметр text.")
+            return
+        en_text = translate_text(text, "ru", "en")
+        ru_channel = discord.utils.get(guild.text_channels, name="объявления")
+        en_channel = discord.utils.get(
+            guild.text_channels, name=ANNOUNCEMENT_EN_CHANNEL
+        )
+        if not ru_channel:
+            await message.channel.send("Не найден канал объявления.")
+            return
+        if not en_channel:
+            await message.channel.send("Не найден канал announcement.")
+            return
+        await ru_channel.send(text)
+        await en_channel.send(en_text)
+        await message.channel.send("Объявления отправлены.")
         return
 
     version = data.get("version")

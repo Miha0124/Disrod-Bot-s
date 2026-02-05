@@ -44,6 +44,16 @@ If you send only Russian (`ru_description`, `log`, `log2`) or only English
 (`en_description`, `en_log1`, `en_log2`), the bot will auto-translate the
 missing language using the configured translation endpoint.
 
+### Text announcements to two channels
+
+```text
+game: announcements
+text: Ваш текст объявления
+```
+
+The bot posts the Russian text to `объявления` and the translated English text
+to `announcement`.
+
 ### Project status (edits the last bot message if it exists)
 
 ```text
