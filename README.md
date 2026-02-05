@@ -10,7 +10,7 @@ Discord bot for publishing formatted game announcements in Russian and English.
 4. Export `DISCORD_TOKEN` with your bot token.
 5. Add `ALLOWED_USER_IDS` with your Discord ID(s), comma-separated.
 6. (Optional) Set `DISCORD_GUILD_ID` if the bot is in multiple servers.
-7. (Optional) Set `TRANSLATE_URL` to a LibreTranslate-compatible endpoint.
+7. (Optional) Set `TRANSLATE_URL` to a LibreTranslate-compatible endpoint. If omitted, the bot uses MyMemory (free public API) as a fallback.
 
 ## Install
 

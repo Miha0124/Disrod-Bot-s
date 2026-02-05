@@ -9,7 +9,8 @@ from discord.ext import commands
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = int(os.getenv("DISCORD_GUILD_ID", "0")) or None
-TRANSLATE_URL = os.getenv("TRANSLATE_URL", "https://libretranslate.de/translate")
+TRANSLATE_URL = os.getenv("TRANSLATE_URL")
+MYMEMORY_URL = "https://api.mymemory.translated.net/get"
 ALLOWED_USER_IDS = {
     int(user_id)
     for user_id in os.getenv("ALLOWED_USER_IDS", "").split(",")
@@ -104,23 +105,35 @@ def parse_key_values(lines: Iterable[str]) -> dict[str, str]:
 def translate_text(text: str, source: str, target: str) -> str:
     if not text:
         return text
-    payload = json.dumps(
-        {
-            "q": text,
-            "source": source,
-            "target": target,
-            "format": "text",
-        }
-    ).encode("utf-8")
-    request = urllib.request.Request(
-        TRANSLATE_URL,
-        data=payload,
-        headers={"Content-Type": "application/json"},
+    if TRANSLATE_URL:
+        payload = json.dumps(
+            {
+                "q": text,
+                "source": source,
+                "target": target,
+                "format": "text",
+            }
+        ).encode("utf-8")
+        request = urllib.request.Request(
+            TRANSLATE_URL,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=10) as response:
+                data = json.loads(response.read().decode("utf-8"))
+            return data.get("translatedText", text)
+        except Exception:
+            return text
+
+    query = urllib.parse.urlencode(
+        {"q": text, "langpair": f"{source}|{target}"}
     )
+    request = urllib.request.Request(f"{MYMEMORY_URL}?{query}")
     try:
         with urllib.request.urlopen(request, timeout=10) as response:
             data = json.loads(response.read().decode("utf-8"))
-        return data.get("translatedText", text)
+        return data.get("responseData", {}).get("translatedText", text)
     except Exception:
         return text
 
