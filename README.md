@@ -29,6 +29,7 @@ python bot.py
 ## Usage
 
 Send the bot a direct message with key/value pairs (one per line).
+Send `Help` in DM to get the full list of formats.
 
 ### Update announcements
 

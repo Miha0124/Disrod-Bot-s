@@ -33,6 +33,26 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+HELP_MESSAGE = """Доступные форматы:
+
+1) Обновления игр:
+game: updates-paradox
+version: 1.2.3
+ru_description: Русское описание
+log: Первый пункт
+log2: Второй пункт (опционально)
+
+2) Объявления (RU + EN):
+game: announcements
+text: Ваш текст объявления
+
+3) Статус проекта:
+game: status-of-projects
+project: Endless Void
+version: 0.9.0
+status: В разработке / In development
+"""
+
 
 def build_embed(
     game: str,
@@ -167,6 +187,9 @@ async def on_message(message: discord.Message) -> None:
     if not isinstance(message.channel, discord.DMChannel):
         return
     if ALLOWED_USER_IDS and message.author.id not in ALLOWED_USER_IDS:
+        return
+    if message.content.strip().lower() == "help":
+        await message.channel.send(HELP_MESSAGE)
         return
 
     data = parse_key_values(message.content.splitlines())
