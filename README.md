@@ -11,8 +11,9 @@ Discord bot for publishing formatted game announcements in Russian and English.
 5. Add `ALLOWED_USER_IDS` with your Discord ID(s), comma-separated.
 6. Add `MANAGER_USER_IDS` with IDs allowed to manage access.
 7. (Optional) Set `ALLOWED_USERS_FILE` to override where access is stored.
-8. (Optional) Set `DISCORD_GUILD_ID` if the bot is in multiple servers.
-9. (Optional) Set `TRANSLATE_URL` to a LibreTranslate-compatible endpoint. If omitted, the bot uses MyMemory (free public API) as a fallback.
+8. (Optional) Set `MANAGER_USERS_FILE` to override where manager access is stored.
+9. (Optional) Set `DISCORD_GUILD_ID` if the bot is in multiple servers.
+10. (Optional) Set `TRANSLATE_URL` to a LibreTranslate-compatible endpoint. If omitted, the bot uses MyMemory (free public API) as a fallback.
 
 ## Install
 
@@ -77,4 +78,11 @@ The bot will post into the matching channel:
 ```text
 User Add: 123456789012345678
 User Del: 123456789012345678
+```
+
+### Manage managers (managers only)
+
+```text
+Mod Add: 123456789012345678
+Mod Del: 123456789012345678
 ```

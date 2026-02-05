@@ -12,6 +12,7 @@ GUILD_ID = int(os.getenv("DISCORD_GUILD_ID", "0")) or None
 TRANSLATE_URL = os.getenv("TRANSLATE_URL")
 MYMEMORY_URL = "https://api.mymemory.translated.net/get"
 ALLOWED_USERS_FILE = os.getenv("ALLOWED_USERS_FILE", "allowed_users.json")
+MANAGER_USERS_FILE = os.getenv("MANAGER_USERS_FILE", "manager_users.json")
 ALLOWED_USER_IDS = {
     int(user_id)
     for user_id in os.getenv("ALLOWED_USER_IDS", "").split(",")
@@ -61,6 +62,10 @@ status: В разработке / In development
 4) Управление доступом (только менеджеры):
 User Add: 123456789012345678
 User Del: 123456789012345678
+
+5) Управление менеджерами:
+Mod Add: 123456789012345678
+Mod Del: 123456789012345678
 """
 
 
@@ -78,6 +83,40 @@ def load_allowed_users() -> set[int]:
 def save_allowed_users(user_ids: set[int]) -> None:
     with open(ALLOWED_USERS_FILE, "w", encoding="utf-8") as handle:
         json.dump(sorted(user_ids), handle, ensure_ascii=False, indent=2)
+
+
+def load_managers() -> set[int]:
+    try:
+        with open(MANAGER_USERS_FILE, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        return {int(user_id) for user_id in data if str(user_id).isdigit()}
+    except FileNotFoundError:
+        return set(MANAGER_USER_IDS)
+    except (json.JSONDecodeError, OSError, ValueError):
+        return set(MANAGER_USER_IDS)
+
+
+def save_managers(user_ids: set[int]) -> None:
+    with open(MANAGER_USERS_FILE, "w", encoding="utf-8") as handle:
+        json.dump(sorted(user_ids), handle, ensure_ascii=False, indent=2)
+
+
+async def build_user_embed(action: str, user_id: int) -> discord.Embed:
+    try:
+        user = await bot.fetch_user(user_id)
+        name = f"{user} ({user.id})"
+        avatar_url = user.display_avatar.url
+    except Exception:
+        name = f"{format_user_mention(user_id)} ({user_id})"
+        avatar_url = None
+    embed = discord.Embed(description=f"{action}: {name}")
+    if avatar_url:
+        embed.set_thumbnail(url=avatar_url)
+    return embed
+
+
+def format_user_mention(user_id: int) -> str:
+    return f"<@{user_id}>"
 
 
 def build_embed(
@@ -206,6 +245,8 @@ async def on_ready() -> None:
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
     if ALLOWED_USERS_FILE and not os.path.exists(ALLOWED_USERS_FILE):
         save_allowed_users(ALLOWED_USER_IDS)
+    if MANAGER_USERS_FILE and not os.path.exists(MANAGER_USERS_FILE):
+        save_managers(MANAGER_USER_IDS)
 
 
 @bot.event
@@ -215,15 +256,15 @@ async def on_message(message: discord.Message) -> None:
     if not isinstance(message.channel, discord.DMChannel):
         return
     allowed_users = load_allowed_users()
+    managers = load_managers()
     if allowed_users and message.author.id not in allowed_users:
         return
     if message.content.strip().lower() == "help":
         await message.channel.send(HELP_MESSAGE)
         return
-    if message.content.lower().startswith("user add:") or message.content.lower().startswith(
-        "user del:"
-    ):
-        if MANAGER_USER_IDS and message.author.id not in MANAGER_USER_IDS:
+    content_lower = message.content.lower()
+    if content_lower.startswith("user add:") or content_lower.startswith("user del:"):
+        if managers and message.author.id not in managers:
             await message.channel.send("Недостаточно прав для управления доступом.")
             return
         action, _, raw_id = message.content.partition(":")
@@ -235,12 +276,37 @@ async def on_message(message: discord.Message) -> None:
         if action.lower().startswith("user add"):
             allowed_users.add(target_id)
             save_allowed_users(allowed_users)
-            await message.channel.send(f"Пользователь {target_id} добавлен.")
+            embed = await build_user_embed("Пользователь добавлен", target_id)
+            await message.channel.send(embed=embed)
             return
         if action.lower().startswith("user del"):
             allowed_users.discard(target_id)
             save_allowed_users(allowed_users)
-            await message.channel.send(f"Пользователь {target_id} удалён.")
+            embed = await build_user_embed("Пользователь удалён", target_id)
+            await message.channel.send(embed=embed)
+            return
+
+    if content_lower.startswith("mod add:") or content_lower.startswith("mod del:"):
+        if managers and message.author.id not in managers:
+            await message.channel.send("Недостаточно прав для управления менеджерами.")
+            return
+        action, _, raw_id = message.content.partition(":")
+        raw_id = raw_id.strip()
+        if not raw_id.isdigit():
+            await message.channel.send("Нужно указать числовой Discord ID.")
+            return
+        target_id = int(raw_id)
+        if action.lower().startswith("mod add"):
+            managers.add(target_id)
+            save_managers(managers)
+            embed = await build_user_embed("Менеджер добавлен", target_id)
+            await message.channel.send(embed=embed)
+            return
+        if action.lower().startswith("mod del"):
+            managers.discard(target_id)
+            save_managers(managers)
+            embed = await build_user_embed("Менеджер удалён", target_id)
+            await message.channel.send(embed=embed)
             return
 
     data = parse_key_values(message.content.splitlines())
