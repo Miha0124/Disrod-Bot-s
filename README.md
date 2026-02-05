@@ -1,0 +1,88 @@
+# Disrod-Bot-s
+
+Discord bot for publishing formatted game announcements in Russian and English.
+
+## Setup
+
+1. Create a Discord application and bot in the Developer Portal.
+2. Enable the **Message Content Intent** (required for DM parsing).
+3. Invite the bot to your server with the `applications.commands` scope.
+4. Export `DISCORD_TOKEN` with your bot token.
+5. Add `ALLOWED_USER_IDS` with your Discord ID(s), comma-separated.
+6. Add `MANAGER_USER_IDS` with IDs allowed to manage access.
+7. (Optional) Set `ALLOWED_USERS_FILE` to override where access is stored.
+8. (Optional) Set `MANAGER_USERS_FILE` to override where manager access is stored.
+9. (Optional) Set `DISCORD_GUILD_ID` if the bot is in multiple servers.
+10. (Optional) Set `TRANSLATE_URL` to a LibreTranslate-compatible endpoint. If omitted, the bot uses MyMemory (free public API) as a fallback.
+
+## Install
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+## Run
+
+```bash
+python bot.py
+```
+
+## Usage
+
+Send the bot a direct message with key/value pairs (one per line).
+Send `Help` in DM to get the full list of formats.
+
+### Update announcements
+
+```text
+game: updates-paradox
+version: 1.2.3
+ru_description: Русское описание
+log: Первый пункт
+log2: Второй пункт (опционально)
+```
+
+If you send only Russian (`ru_description`, `log`, `log2`) or only English
+(`en_description`, `en_log1`, `en_log2`), the bot will auto-translate the
+missing language using the configured translation endpoint.
+
+### Text announcements to two channels
+
+```text
+game: announcements
+text: Ваш текст объявления
+```
+
+The bot posts the Russian text to `объявления` and the translated English text
+to `announcement`.
+
+### Project status (edits the last bot message if it exists)
+
+```text
+game: status-of-projects
+project: Endless Void
+version: 0.9.0
+status: В разработке / In development
+```
+
+The bot will post into the matching channel:
+- updates-paradox
+- updates-bdft
+- update-endless-void
+- status-of-projects
+
+### Manage allowed users (managers only)
+
+```text
+User Add: 123456789012345678
+User Del: 123456789012345678
+```
+
+### Manage managers (managers only)
+
+```text
+Mod Add: 123456789012345678
+Mod Del: 123456789012345678
+```
